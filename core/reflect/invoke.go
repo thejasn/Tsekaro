@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	protov1 "github.com/golang/protobuf/proto"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // InvocationEventHandler is a bag of callbacks for handling events that occur in the course
@@ -28,7 +29,7 @@ type InvocationEventHandler interface {
 	// OnReceiveHeaders is called when response headers have been received.
 	OnReceiveHeaders(metadata.MD)
 	// OnReceiveResponse is called for each response message received.
-	OnReceiveResponse(proto.Message)
+	OnReceiveResponse(proto.Message) string
 	// OnReceiveTrailers is called when response trailers and final RPC status have been received.
 	OnReceiveTrailers(*status.Status, metadata.MD)
 }
@@ -54,28 +55,28 @@ type RequestSupplier func(proto.Message) error
 // than the one invoking event callbacks. (This only happens for bi-directional streaming RPCs, where
 // one goroutine sends request messages and another consumes the response messages).
 func InvokeRPC(ctx context.Context, source DescriptorSource, ch grpcdynamic.Channel, methodName string,
-	headers []string, handler InvocationEventHandler, requestData RequestSupplier) error {
+	headers []string, handler InvocationEventHandler, requestData RequestSupplier) (string, error) {
 
 	md := MetadataFromHeaders(headers)
 
 	svc, mth := parseSymbol(methodName)
 	if svc == "" || mth == "" {
-		return fmt.Errorf("given method name %q is not in expected format: 'service/method' or 'service.method'", methodName)
+		return "", fmt.Errorf("given method name %q is not in expected format: 'service/method' or 'service.method'", methodName)
 	}
 	dsc, err := source.FindSymbol(svc)
 	if err != nil {
 		if isNotFoundError(err) {
-			return fmt.Errorf("target server does not expose service %q", svc)
+			return "", fmt.Errorf("target server does not expose service %q", svc)
 		}
-		return fmt.Errorf("failed to query for service descriptor %q: %v", svc, err)
+		return "", fmt.Errorf("failed to query for service descriptor %q: %v", svc, err)
 	}
 	sd, ok := dsc.(*desc.ServiceDescriptor)
 	if !ok {
-		return fmt.Errorf("target server does not expose service %q", svc)
+		return "", fmt.Errorf("target server does not expose service %q", svc)
 	}
 	mtd := sd.FindMethodByName(mth)
 	if mtd == nil {
-		return fmt.Errorf("service %q does not include a method named %q", svc, mth)
+		return "", fmt.Errorf("service %q does not include a method named %q", svc, mth)
 	}
 
 	handler.OnResolveMethod(mtd)
@@ -84,10 +85,10 @@ func InvokeRPC(ctx context.Context, source DescriptorSource, ch grpcdynamic.Chan
 	var ext dynamic.ExtensionRegistry
 	alreadyFetched := map[string]bool{}
 	if err = fetchAllExtensions(source, &ext, mtd.GetInputType(), alreadyFetched); err != nil {
-		return fmt.Errorf("error resolving server extensions for message %s: %v", mtd.GetInputType().GetFullyQualifiedName(), err)
+		return "", fmt.Errorf("error resolving server extensions for message %s: %v", mtd.GetInputType().GetFullyQualifiedName(), err)
 	}
 	if err = fetchAllExtensions(source, &ext, mtd.GetOutputType(), alreadyFetched); err != nil {
-		return fmt.Errorf("error resolving server extensions for message %s: %v", mtd.GetOutputType().GetFullyQualifiedName(), err)
+		return "", fmt.Errorf("error resolving server extensions for message %s: %v", mtd.GetOutputType().GetFullyQualifiedName(), err)
 	}
 
 	msgFactory := dynamic.NewMessageFactoryWithExtensionRegistry(&ext)
@@ -100,47 +101,48 @@ func InvokeRPC(ctx context.Context, source DescriptorSource, ch grpcdynamic.Chan
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	return invokeUnary(ctx, stub, mtd, handler, requestData, req)
+	return invokeUnary(ctx, stub, mtd, handler, requestData, protov1.MessageV2(req))
 }
 
 func invokeUnary(ctx context.Context, stub grpcdynamic.Stub, md *desc.MethodDescriptor, handler InvocationEventHandler,
-	requestData RequestSupplier, req proto.Message) error {
+	requestData RequestSupplier, req proto.Message) (string, error) {
 
 	err := requestData(req)
 	if err != nil && err != io.EOF {
-		return fmt.Errorf("error getting request data: %v", err)
+		return "", fmt.Errorf("error getting request data: %v", err)
 	}
 	if err != io.EOF {
 		// verify there is no second message, which is a usage error
 		err := requestData(req)
 		if err == nil {
-			return fmt.Errorf("method %q is a unary RPC, but request data contained more than 1 message", md.GetFullyQualifiedName())
+			return "", fmt.Errorf("method %q is a unary RPC, but request data contained more than 1 message", md.GetFullyQualifiedName())
 		} else if err != io.EOF {
-			return fmt.Errorf("error getting request data: %v", err)
+			return "", fmt.Errorf("error getting request data: %v", err)
 		}
 	}
 
 	// Now we can actually invoke the RPC!
 	var respHeaders metadata.MD
 	var respTrailers metadata.MD
-	resp, err := stub.InvokeRpc(ctx, md, req, grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
+	resp, err := stub.InvokeRpc(ctx, md, protov1.MessageV1(req), grpc.Trailer(&respTrailers), grpc.Header(&respHeaders))
 
 	stat, ok := status.FromError(err)
 	if !ok {
 		// Error codes sent from the server will get printed differently below.
 		// So just bail for other kinds of errors here.
-		return fmt.Errorf("grpc call for %q failed: %v", md.GetFullyQualifiedName(), err)
+		return "", fmt.Errorf("grpc call for %q failed: %v", md.GetFullyQualifiedName(), err)
 	}
 
 	handler.OnReceiveHeaders(respHeaders)
 
+	var r string
 	if stat.Code() == codes.OK {
-		handler.OnReceiveResponse(resp)
+		r = handler.OnReceiveResponse(protov1.MessageV2(resp))
 	}
 
 	handler.OnReceiveTrailers(stat, respTrailers)
 
-	return nil
+	return r, nil
 }
 
 type notFoundError string

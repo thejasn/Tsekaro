@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	protoV2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )
@@ -27,7 +28,7 @@ type RequestParser interface {
 	// input is exhausted, it returns io.EOF. If the caller re-uses the same
 	// instance in multiple calls to Next, it should call msg.Reset() in between
 	// each call.
-	Next(msg proto.Message) error
+	Next(msg protoV2.Message) error
 	// NumRequests returns the number of messages that have been parsed and
 	// returned by a call to Next.
 	NumRequests() int
@@ -56,13 +57,13 @@ func NewJSONRequestParser(in io.Reader, resolver jsonpb.AnyResolver) RequestPars
 	}
 }
 
-func (f *jsonRequestParser) Next(m proto.Message) error {
+func (f *jsonRequestParser) Next(m protoV2.Message) error {
 	var msg json.RawMessage
 	if err := f.dec.Decode(&msg); err != nil {
 		return err
 	}
 	f.requestCount++
-	return f.unmarshaler.Unmarshal(bytes.NewReader(msg), m)
+	return f.unmarshaler.Unmarshal(bytes.NewReader(msg), proto.MessageV1(m))
 }
 
 func (f *jsonRequestParser) NumRequests() int {
@@ -94,7 +95,7 @@ func NewTextRequestParser(in io.Reader) RequestParser {
 	return &textRequestParser{r: bufio.NewReader(in)}
 }
 
-func (f *textRequestParser) Next(m proto.Message) error {
+func (f *textRequestParser) Next(m protoV2.Message) error {
 	if f.err != nil {
 		return f.err
 	}
@@ -111,7 +112,7 @@ func (f *textRequestParser) Next(m proto.Message) error {
 
 	f.requestCount++
 
-	return proto.UnmarshalText(string(b), m)
+	return proto.UnmarshalText(string(b), proto.MessageV1(m))
 }
 
 func (f *textRequestParser) NumRequests() int {
@@ -354,15 +355,16 @@ func (h *DefaultEventHandler) OnReceiveHeaders(md metadata.MD) {
 	}
 }
 
-func (h *DefaultEventHandler) OnReceiveResponse(resp proto.Message) {
+func (h *DefaultEventHandler) OnReceiveResponse(resp protoV2.Message) string {
 	h.NumResponses++
 	if h.verbose {
 		fmt.Fprint(h.out, "\nResponse contents:\n")
 	}
-	if respStr, err := h.formatter(resp); err != nil {
+	if respStr, err := h.formatter(proto.MessageV1(resp)); err != nil {
 		fmt.Fprintf(h.out, "Failed to format response message %d: %v\n", h.NumResponses, err)
+		return "asdasd"
 	} else {
-		fmt.Fprintln(h.out, respStr)
+		return respStr
 	}
 }
 
