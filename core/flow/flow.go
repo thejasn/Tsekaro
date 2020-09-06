@@ -1,41 +1,49 @@
 package flow
 
 import (
-	"sync"
+	"encoding/json"
+	"strconv"
 
 	"github.com/thejasn/tester/core/asserter"
 	"github.com/thejasn/tester/core/tester"
+	"github.com/tidwall/gjson"
 )
 
 type Engine interface {
 	Execute(tester.Executor) Engine
-	PostExecute(...asserter.Assertion) Engine
 }
 
 type Linear struct {
-	ctx sync.Map
+	currentKey int
+	Ctx        Context
 }
 
-func (l *Linear) Execute(fn tester.Executor) Engine {
-	key, content := fn.Execute()
-	val, ok := l.ctx.Load(key)
-	if ok {
-		for k, v := range content {
-			val.(map[string]interface{})[k] = v
-		}
-		l.ctx.Store(key, val)
-	} else {
-		l.ctx.Store(key, content)
+func NewLinearFlow() Linear {
+	return Linear{
+		currentKey: 0,
+		Ctx:        NewInMemoryContext(),
 	}
-	return l
 }
 
-func (l *Linear) PostExecute(actions ...asserter.Assertion) Engine {
+func (l *Linear) Execute(actionId string, fn tester.Executor, actions ...asserter.Assertion) *Linear {
+	_, content, _ := fn()
+	var dest map[string]interface{}
+	err := json.Unmarshal([]byte(content), &dest)
+	if err != nil {
+		panic(err)
+	}
+	l.Ctx.Store(strconv.Itoa(l.currentKey), dest)
 	for _, a := range actions {
+		src, err := json.Marshal(l.Ctx.Get(actionId))
+		if err != nil {
+			panic(err)
+		}
+		a.Actual = gjson.Get(string(src), a.Actual.(string)).Value()
 		ok, msg := a.Assert()
 		if !ok {
 			panic(msg)
 		}
 	}
+	l.currentKey++
 	return l
 }
