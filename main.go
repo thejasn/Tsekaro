@@ -23,18 +23,21 @@ func main() {
 		Expected: "Hello thejas",
 		Actual:   "message",
 		Operator: asserter.Equal})
+
 	l.Execute("1", tester.GrpcExecutor(gc,
 		grpcClient.WithRequest(l.Ctx.Mapper("0", `{"name": "$message"}`)),
 		grpcClient.WithMethod("helloworld.Greeter/SayHello")), asserter.Assertion{
 		Expected: "Hello Hello thejas",
 		Actual:   "message",
 		Operator: asserter.Equal})
+
 	l.Execute("2", tester.GrpcExecutor(gc,
 		grpcClient.WithRequest(l.Ctx.Mapper("1", `{"name": "$message"}`)),
 		grpcClient.WithMethod("helloworld.Greeter/SayHello")), asserter.Assertion{
 		Expected: "Hello Hello Hello thejas",
 		Actual:   "message",
 		Operator: asserter.Equal})
+
 	l.Execute("3", tester.RestExecutor(rc,
 		restClient.WithMethod("GET"),
 		restClient.WithHeaders(map[string]string{"test": "value"}),
@@ -43,6 +46,7 @@ func main() {
 		Actual:   "message",
 		Operator: asserter.Equal,
 	})
+
 	l.Execute("4", tester.RestExecutor(rc,
 		restClient.WithMethod("POST"),
 		restClient.WithHeaders(map[string]string{"test": "value"}),
