@@ -3,8 +3,8 @@ module github.com/thejasn/tester
 go 1.14
 
 require (
-	github.com/CDNA-Technologies/go-vault-helper v1.0.0
 	github.com/bxcodec/faker/v3 v3.5.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-playground/validator/v10 v10.4.0 // indirect
