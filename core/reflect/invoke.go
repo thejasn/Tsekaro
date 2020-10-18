@@ -29,7 +29,7 @@ type InvocationEventHandler interface {
 	// OnReceiveHeaders is called when response headers have been received.
 	OnReceiveHeaders(metadata.MD)
 	// OnReceiveResponse is called for each response message received.
-	OnReceiveResponse(proto.Message) string
+	OnReceiveResponse(proto.Message) (string, error)
 	// OnReceiveTrailers is called when response trailers and final RPC status have been received.
 	OnReceiveTrailers(*status.Status, metadata.MD)
 }
@@ -79,7 +79,7 @@ func InvokeRPC(ctx context.Context, source DescriptorSource, ch grpcdynamic.Chan
 		return "", fmt.Errorf("service %q does not include a method named %q", svc, mth)
 	}
 
-	handler.OnResolveMethod(mtd)
+	//handler.OnResolveMethod(mtd)
 
 	// we also download any applicable extensions so we can provide full support for parsing user-provided data
 	var ext dynamic.ExtensionRegistry
@@ -94,7 +94,7 @@ func InvokeRPC(ctx context.Context, source DescriptorSource, ch grpcdynamic.Chan
 	msgFactory := dynamic.NewMessageFactoryWithExtensionRegistry(&ext)
 	req := msgFactory.NewMessage(mtd.GetInputType())
 
-	handler.OnSendHeaders(md)
+	//handler.OnSendHeaders(md)
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	stub := grpcdynamic.NewStubWithMessageFactory(ch, msgFactory)
@@ -133,15 +133,10 @@ func invokeUnary(ctx context.Context, stub grpcdynamic.Stub, md *desc.MethodDesc
 		return "", fmt.Errorf("grpc call for %q failed: %v", md.GetFullyQualifiedName(), err)
 	}
 
-	handler.OnReceiveHeaders(respHeaders)
-
 	var r string
 	if stat.Code() == codes.OK {
-		r = handler.OnReceiveResponse(protov1.MessageV2(resp))
+		return handler.OnReceiveResponse(protov1.MessageV2(resp))
 	}
-
-	handler.OnReceiveTrailers(stat, respTrailers)
-
 	return r, nil
 }
 

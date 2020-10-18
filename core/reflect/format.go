@@ -355,16 +355,12 @@ func (h *DefaultEventHandler) OnReceiveHeaders(md metadata.MD) {
 	}
 }
 
-func (h *DefaultEventHandler) OnReceiveResponse(resp protoV2.Message) string {
+func (h *DefaultEventHandler) OnReceiveResponse(resp protoV2.Message) (string, error) {
 	h.NumResponses++
-	if h.verbose {
-		fmt.Fprint(h.out, "\nResponse contents:\n")
-	}
 	if respStr, err := h.formatter(proto.MessageV1(resp)); err != nil {
-		fmt.Fprintf(h.out, "Failed to format response message %d: %v\n", h.NumResponses, err)
-		return "asdasd"
+		return "", fmt.Errorf("Failed to format response message %+v: %w", resp, err)
 	} else {
-		return respStr
+		return respStr, nil
 	}
 }
 

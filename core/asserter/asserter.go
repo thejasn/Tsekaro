@@ -17,7 +17,7 @@ type Assertion struct {
 }
 
 var (
-	Equal = "equal"
+	Equal = "EQUAL"
 )
 
 func (a Assertion) Assert() (bool, string) {
