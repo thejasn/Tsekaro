@@ -2,6 +2,7 @@ package cerrors
 
 import (
 	"errors"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,11 +18,26 @@ var (
 	// ErrInValidation signifies given input failed some kind of validation
 	ErrInValidation = errors.New("validation failed")
 
-	// ErrNotFound signifies the resource you were looking for isn't present
-	ErrNotFound = errors.New("not found")
-
 	// ErrInvalid signifies invalid input/arg in request
 	ErrInvalid = errors.New("invalid")
+
+	// ErrNotFound error when record not found
+	ErrNotFound = fmt.Errorf("record Not Found")
+
+	// ErrUnableToMarshalJSON error when json payload corrupt
+	ErrUnableToMarshalJSON = fmt.Errorf("json payload corrupt")
+
+	// ErrUpdateFailed error when update fails
+	ErrUpdateFailed = fmt.Errorf("db update error")
+
+	// ErrInsertFailed error when insert fails
+	ErrInsertFailed = fmt.Errorf("db insert error")
+
+	// ErrDeleteFailed error when delete fails
+	ErrDeleteFailed = fmt.Errorf("db delete error")
+
+	// ErrBadParams error when bad params passed in
+	ErrBadParams = fmt.Errorf("bad params error")
 )
 
 // GrpcHandler checks for specific types of errors and returns

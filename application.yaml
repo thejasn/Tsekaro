@@ -1,0 +1,12 @@
+logging:
+  debug: false
+database:
+  url: root:Thejas!23@(localhost:3306)/tester?charset=utf8&parseTime=True&loc=Local
+  idleConnections: 2
+  openConnections: 2
+  connectionLifetime: 50m
+
+cache:
+  # In bytes, where 1024 * 1024 represents a single Megabyte. 128000000 = 128mb
+  size: 128000000
+  ttl: 15m
