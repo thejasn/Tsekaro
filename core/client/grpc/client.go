@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ func (p *Config) Clear() {
 	p.request = ""
 }
 
-func (p *Config) Build() error {
+func (p *Config) Build(ctx context.Context) error {
 	dial := func() *grpc.ClientConn {
 		clientBuilder := GrpcClientBuilder{}
 		dialTime := 10 * time.Second
@@ -61,7 +62,7 @@ func (p *Config) Build() error {
 		clientBuilder.WithContext(ctx)
 		cc, err := clientBuilder.GetConn(p.host, p.port)
 		if err != nil {
-			log.G(ctx).Fatal(errors.Wrapf(err, "Failed to dial target host %q and port %q", p.host, p.port))
+			log.GetLogger(ctx).Fatal(errors.Wrapf(err, "Failed to dial target host %q and port %q", p.host, p.port))
 		}
 		return cc
 	}
@@ -69,12 +70,14 @@ func (p *Config) Build() error {
 	p.rc.WithClientConn(dial())
 	p.rc.WithContext(p.ctx)
 	p.rc.WithPayload(strings.NewReader(p.request))
+	log.GetLogger(ctx).Debugf("Rest Client Config: %+v", p)
 	return nil
 }
 
 func (p *Config) Invoke() (string, error) {
 	r, err := p.rc.InvokeRPC(p.method)
 	if err != nil {
+		fmt.Println(err)
 		return "", errors.Wrapf(err, "Error invoking method %q", p.method)
 	}
 	return r, nil

@@ -1,17 +1,21 @@
 package tester
 
 import (
+	"context"
+
+	"github.com/thejasn/tester/pkg/log"
+
 	"github.com/thejasn/tester/core/client"
 )
 
 type Executor func() (string, string, error)
 
-func GrpcExecutor(cc client.Runner, opts ...client.RunnerOpts) Executor {
+func GrpcExecutor(ctx context.Context, cc client.Runner, opts ...client.RunnerOpts) Executor {
 	return func() (string, string, error) {
 		for _, opt := range opts {
 			opt(cc)
 		}
-		err := cc.Build()
+		err := cc.Build(ctx)
 		if err != nil {
 			return "", "", err
 		}
@@ -19,17 +23,18 @@ func GrpcExecutor(cc client.Runner, opts ...client.RunnerOpts) Executor {
 		if err != nil {
 			return "", "", err
 		}
+		log.GetLogger(ctx).Debugf("Response: %+v", jsonStr)
 		cc.Clear()
 		return cc.GetIdentifier(), jsonStr, nil
 	}
 }
 
-func RestExecutor(cc client.Runner, opts ...client.RunnerOpts) Executor {
+func RestExecutor(ctx context.Context, cc client.Runner, opts ...client.RunnerOpts) Executor {
 	return func() (string, string, error) {
 		for _, opt := range opts {
 			opt(cc)
 		}
-		err := cc.Build()
+		err := cc.Build(ctx)
 		if err != nil {
 			return "", "", err
 		}
@@ -37,6 +42,7 @@ func RestExecutor(cc client.Runner, opts ...client.RunnerOpts) Executor {
 		if err != nil {
 			return "", "", err
 		}
+		log.GetLogger(ctx).Debugf("Response: %+v", jsonStr)
 		cc.Clear()
 		return cc.GetIdentifier(), jsonStr, nil
 	}

@@ -1,8 +1,10 @@
 package client
 
+import "context"
+
 type Runner interface {
 	GetIdentifier() string
-	Build() error
+	Build(context.Context) error
 	Invoke() (string, error)
 	Clear()
 }

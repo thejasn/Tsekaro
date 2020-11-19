@@ -13,15 +13,6 @@ import (
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
-var (
-	exit = os.Exit
-)
-
-// To avoid confusion between program error codes and the gRPC resonse
-// status codes 'Cancelled' and 'Unknown', 1 and 2 respectively,
-// the response status codes emitted use an offest of 64
-const statusCodeOffset = 64
-
 type ReflectClientBuilder struct {
 	ctx         context.Context
 	in          io.Reader
@@ -68,30 +59,19 @@ func (r *ReflectClientBuilder) InvokeRPC(methodName string) (string, error) {
 	h := reflect.NewDefaultEventHandler(os.Stdout, descSource, formatter, true)
 
 	resp, err := reflect.InvokeRPC(r.ctx, descSource, r.cc, methodName, append(r.addlHeaders, r.rpcHeaders...), h, rf.Next)
-	log.GetLogger(r.ctx).Debugf("Sent: %d and received %d\n", rf.NumRequests(), h.NumResponses)
+
+	reset := func() {
+		if refClient != nil {
+			refClient.Reset()
+			refClient = nil
+		}
+		if r.cc != nil {
+			r.cc.Close()
+			r.cc = nil
+		}
+	}
+
+	defer reset()
 
 	return resp, err
-	// if h.Status.Code() != codes.OK {
-	// 	reflect.PrintStatus(os.Stderr, h.Status, formatter)
-
-	// 	exit(statusCodeOffset + int(h.Status.Code()))
-	// }
-
-	// // arrange for the RPCs to be cleanly shutdown
-	// reset := func() {
-	// 	if refClient != nil {
-	// 		refClient.Reset()
-	// 		refClient = nil
-	// 	}
-	// 	if r.cc != nil {
-	// 		r.cc.Close()
-	// 		r.cc = nil
-	// 	}
-	// }
-	// defer reset()
-	// exit = func(code int) {
-	// 	// since defers aren't run by os.Exit...
-	// 	reset()
-	// 	os.Exit(code)
-	// }
 }

@@ -3,30 +3,29 @@ package log
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	// G is an alias for GetLogger.
-	//
-	// We may want to define this locally to a package to get package tagged log
-	// messages.
-	G = GetLogger
+var doOnce sync.Once
+var entry *logrus.Entry
 
-	// L is an alias for the standard logger.
-	L = logrus.NewEntry(logrus.New())
-)
+func Init() *logrus.Entry {
+	doOnce.Do(func() {
+		l := logrus.New()
+		entry = logrus.NewEntry(l)
+		entry.Logger.Out = os.Stdout
+		entry.Logger.Level = logrus.DebugLevel
+		entry.Logger.SetFormatter(&logrus.TextFormatter{
+			ForceColors:     true,
+			FullTimestamp:   true,
+			TimestampFormat: RFC3339NanoFixed,
+		})
 
-func init() {
-	L.Logger.Out = os.Stdout
-	L.Logger.Level = logrus.DebugLevel
-	L.Logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors:     true,
-		FullTimestamp:   true,
-		TimestampFormat: RFC3339NanoFixed,
 	})
+	return entry
 }
 
 // RFC3339NanoFixed is time.RFC3339Nano with nanoseconds padded using zeros to
@@ -45,8 +44,10 @@ func GetLogger(ctx context.Context) *logrus.Entry {
 	logger := ctxlogrus.Extract(ctx)
 
 	if logger == nil {
-		return L
+		return Init()
 	}
-
-	return logger
+	fields := logrus.Fields{
+		RequestIDHeader: GetReqID(ctx),
+	}
+	return logger.WithFields(fields)
 }

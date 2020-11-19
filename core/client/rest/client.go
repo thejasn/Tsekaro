@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/thejasn/tester/core/client"
+	"github.com/thejasn/tester/pkg/log"
 )
 
 type Config struct {
@@ -60,7 +61,7 @@ func (c Config) GetIdentifier() string {
 	return "1"
 }
 
-func (c *Config) Build() error {
+func (c *Config) Build(ctx context.Context) error {
 	var err error
 	var req *http.Request
 	if c.method == "POST" {
@@ -77,6 +78,7 @@ func (c *Config) Build() error {
 	for k, v := range c.headers {
 		c.request.Header.Add(k, v)
 	}
+	log.GetLogger(ctx).Debugf("Rest Client Config: %+v", c)
 	return nil
 }
 
