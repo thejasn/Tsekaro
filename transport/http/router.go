@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/thejasn/tester/pkg/log"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/rs/cors"
+	"github.com/thejasn/tester/pkg/log"
 	"github.com/thejasn/tester/transport/http/handler"
 )
 
@@ -35,8 +35,8 @@ func (r Router) Route(ctx context.Context) *chi.Mux {
 		middleware.Recoverer,
 		log.RequestID,
 		log.Logger(ctx, log.DefaultCodeToLevel),
+		cors.Default().Handler,
 	)
-
 	r.mux.Route("/v1", func(m chi.Router) {
 		m.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
