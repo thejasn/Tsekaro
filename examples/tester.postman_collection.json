@@ -1,0 +1,394 @@
+{
+	"info": {
+		"_postman_id": "6e44c78a-008c-4774-8efc-6c7e256494cd",
+		"name": "tester",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Flow",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"flow2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/v1/flows",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Flow",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/flows/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Flows",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"connection": true,
+					"accept-encoding": true,
+					"user-agent": true
+				}
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/flows?page=5&pagesize=1&order=name",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "5"
+						},
+						{
+							"key": "pagesize",
+							"value": "1"
+						},
+						{
+							"key": "order",
+							"value": "name"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get All Flows",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/flows?page=5&pagesize=1&order=name",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"flows"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "5"
+								},
+								{
+									"key": "pagesize",
+									"value": "1"
+								},
+								{
+									"key": "order",
+									"value": "name"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 18 Oct 2020 16:11:38 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "52"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"page\": 5,\n    \"page_size\": 1,\n    \"data\": [],\n    \"total_records\": 2\n}"
+				}
+			]
+		},
+		{
+			"name": "Update Flows",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"name2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/v1/flows/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Flow",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/flows/10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows",
+						"10"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Testcase",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"step1\",\n    \"flow_id\": 11,\n    \"api\": \"GRPC\",\n    \"test_case_id\": 1,\n    \"operation\": \"EQUAL\",\n    \"expected\": {\n        \"data\": \"Hello thejas!\"\n    },\n    \"actual\": \"message\",\n    \"scheme\": \"http\",\n    \"host\": \"localhost\",\n    \"port\": 50051,\n    \"path\": \"helloworld.Greeter/SayHello\",\n    \"body\": \"{\\\"message\\\": \\\"thejas\\\"}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Testcase",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases/5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Testcases",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Execute Testcase",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases/execute/5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases",
+						"execute",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Testcase",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"step1\",\n    \"flow_id\": 11,\n    \"api\": \"GRPC\",\n    \"test_case_id\": 1,\n    \"operation\": \"EQUAL\",\n    \"expected\": {\n        \"data\": \"Hello thejas\"\n    },\n    \"actual\": \"message\",\n    \"scheme\": \"http\",\n    \"host\": \"localhost\",\n    \"port\": 50051,\n    \"path\": \"helloworld.Greeter/SayHello\",\n    \"body\": \"{\\\"name\\\": \\\"thejas\\\"}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases/6",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases",
+						"6"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Testcase",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/testcases/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"testcases",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Execute Flow",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/flows/execute/11",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"flows",
+						"execute",
+						"11"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
