@@ -21,7 +21,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smallnest/gen v0.9.27
 	github.com/stretchr/testify v1.6.1 // indirect
-	github.com/tidwall/gjson v1.6.1
+	github.com/tidwall/gjson v1.6.5
 	github.com/ugorji/go v1.1.10 // indirect
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0 // indirect
 	golang.org/x/net v0.0.0-20201002202402-0a1ea396d57c // indirect
